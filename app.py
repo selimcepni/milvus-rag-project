@@ -7,8 +7,8 @@ import threading
 from milvus_client import MilvusClient
 from config import Config
 
-# Logging setup
-os.makedirs('/opt/milvus-rag/logs', exist_ok=True)
+# Logging setup (proje dizinine göre)
+os.makedirs(Config.LOG_DIR, exist_ok=True)
 logging.basicConfig(
     level=getattr(logging, Config.LOG_LEVEL),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',

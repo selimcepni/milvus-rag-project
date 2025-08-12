@@ -5,14 +5,14 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=admin
-Group=admin
-WorkingDirectory=/opt/milvus-rag
-Environment=PATH=/opt/milvus-rag/venv/bin:/usr/local/bin:/usr/bin:/bin
-Environment=PYTHONPATH=/opt/milvus-rag
-Environment=MILVUS_HOST=localhost
-Environment=MILVUS_PORT=19530
-ExecStart=/opt/milvus-rag/venv/bin/gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 --access-logfile /opt/milvus-rag/logs/access.log --error-logfile /opt/milvus-rag/logs/error.log app:app
+# Bu dosya, kurulum dizinine göre düzenlenmelidir. Aşağıdaki değişkenler environment dosyasından gelir.
+EnvironmentFile=/etc/default/milvus-rag
+WorkingDirectory=${MILVUS_RAG_ROOT}
+Environment=PATH=${MILVUS_RAG_ROOT}/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=${MILVUS_RAG_ROOT}
+Environment=MILVUS_HOST=${MILVUS_HOST}
+Environment=MILVUS_PORT=${MILVUS_PORT}
+ExecStart=${MILVUS_RAG_ROOT}/venv/bin/gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 --access-logfile ${MILVUS_RAG_LOG_DIR}/access.log --error-logfile ${MILVUS_RAG_LOG_DIR}/error.log app:app
 ExecReload=/bin/kill -s HUP $MAINPID
 Restart=always
 RestartSec=10
@@ -22,7 +22,7 @@ StandardError=journal
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ReadWritePaths=/opt/milvus-rag/logs
+ReadWritePaths=${MILVUS_RAG_LOG_DIR}
 
 [Install]
 WantedBy=multi-user.target

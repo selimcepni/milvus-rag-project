@@ -42,10 +42,9 @@ pip install --upgrade pip
 echo "📦 Installing Milvus v2.6.0 compatible requirements..."
 pip install -r requirements.txt
 
-# Log dizinini oluştur
+# Log dizinini proje altında oluştur
 echo "📁 Creating log directory..."
-sudo mkdir -p /opt/milvus-rag/logs
-sudo chown -R $USER:$USER /opt/milvus-rag
+mkdir -p logs
 
 # Milvus Docker container'ının çalıştığını kontrol et
 echo "🔍 Checking Milvus Docker container..."

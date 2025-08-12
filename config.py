@@ -26,4 +26,8 @@ class Config:
     
     # Log ayarları
     LOG_LEVEL = 'INFO'
-    LOG_FILE = '/opt/milvus-rag/logs/app.log'
+    # Proje kök dizini (env ile override edilebilir)
+    PROJECT_ROOT = os.getenv('MILVUS_RAG_ROOT', os.path.dirname(os.path.abspath(__file__)))
+    # Log dizini (env ile override edilebilir); varsayılan olarak proje altındaki logs/
+    LOG_DIR = os.getenv('MILVUS_RAG_LOG_DIR', os.path.join(PROJECT_ROOT, 'logs'))
+    LOG_FILE = os.path.join(LOG_DIR, 'app.log')
