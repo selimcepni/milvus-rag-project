@@ -8,12 +8,14 @@ if [ ! -f "app.py" ]; then
     exit 1
 fi
 
-# Activate virtual environment
-if [ -d "venv" ]; then
-    echo "🌐 Activating virtual environment..."
-    source venv/bin/activate
+# Activate virtual environment (supports VENV_PATH override)
+VENV_PATH=${VENV_PATH:-venv}
+if [ -d "$VENV_PATH" ]; then
+    echo "🌐 Activating virtual environment at $VENV_PATH..."
+    # shellcheck disable=SC1090
+    source "$VENV_PATH/bin/activate"
 else
-    echo "❌ Virtual environment not found. Run install.sh first."
+    echo "❌ Virtual environment not found at $VENV_PATH. Run install.sh first."
     exit 1
 fi
 
