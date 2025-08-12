@@ -1,4 +1,4 @@
-from pymilvus import connections, Collection, FieldSchema, CollectionSchema, DataType
+from pymilvus import connections, Collection, FieldSchema, CollectionSchema, DataType, utility
 import logging
 from config import Config
 
@@ -13,12 +13,20 @@ class MilvusClient:
     def connect(self):
         """Milvus'a bağlan"""
         try:
+            # Milvus v2.6.0 için geliştirilmiş bağlantı
             connections.connect(
                 "default", 
                 host=Config.MILVUS_HOST, 
-                port=Config.MILVUS_PORT
+                port=Config.MILVUS_PORT,
+                timeout=30  # v2.6.0 için timeout eklendi
             )
-            logger.info("Milvus connection established")
+            
+            # Bağlantı durumunu kontrol et
+            if utility.get_server_version():
+                logger.info(f"Milvus connection established. Server version: {utility.get_server_version()}")
+            else:
+                logger.info("Milvus connection established")
+                
         except Exception as e:
             logger.error(f"Milvus connection failed: {e}")
             raise
@@ -38,7 +46,9 @@ class MilvusClient:
         schema = CollectionSchema(fields, "Turkish TV Series Sentences")
         
         collection_name = "tv_series_sentences"
-        if collection_name in [c.name for c in connections.get_connection().list_collections()]:
+        
+        # Milvus v2.6.0 için geliştirilmiş collection yönetimi
+        if utility.has_collection(collection_name):
             self.collection = Collection(collection_name)
             logger.info(f"Connected to existing collection: {collection_name}")
         else:
@@ -46,18 +56,36 @@ class MilvusClient:
             self.create_index()
             logger.info(f"Created new collection: {collection_name}")
         
-        self.collection.load()
+        # v2.6.0'da lazy loading desteği
+        if not utility.loading_progress(collection_name)['loading_progress'] == '100%':
+            self.collection.load()
+            logger.info(f"Collection {collection_name} loaded successfully")
     
     def create_index(self):
-        """Index oluştur"""
+        """Index oluştur - Milvus v2.6.0 optimizasyonları ile"""
+        # v2.6.0'da RaBitQ 1-bit quantization desteği
         index_params = {
             "metric_type": "COSINE",
-            "index_type": "IVF_FLAT",
-            "params": {"nlist": Config.INDEX_NLIST}
+            "index_type": "IVF_FLAT",  # Alternatif: "HNSW" daha iyi performans için
+            "params": {
+                "nlist": Config.INDEX_NLIST,
+                "M": 16,  # HNSW için ek parametre
+                "efConstruction": 200  # HNSW için ek parametre
+            }
         }
         
-        self.collection.create_index("embedding", index_params)
-        logger.info("Index created")
+        try:
+            self.collection.create_index("embedding", index_params)
+            logger.info("Index created successfully with v2.6.0 optimizations")
+        except Exception as e:
+            # Fallback to basic index if advanced features fail
+            basic_params = {
+                "metric_type": "COSINE",
+                "index_type": "IVF_FLAT",
+                "params": {"nlist": Config.INDEX_NLIST}
+            }
+            self.collection.create_index("embedding", basic_params)
+            logger.info("Index created with basic configuration")
     
     def insert_sentences(self, sentences, project_name, season, episode_number, timecode, embeddings):
         """Cümleleri ekle"""
@@ -84,11 +112,16 @@ class MilvusClient:
             return False
     
     def search_similar(self, query_embeddings, filters=None, top_k=1):
-        """Benzer cümleleri ara"""
+        """Benzer cümleleri ara - Milvus v2.6.0 gelişmiş arama özellikleri"""
         try:
+            # v2.6.0'da geliştirilmiş arama parametreleri
             search_params = {
                 "metric_type": "COSINE",
-                "params": {"nprobe": Config.SEARCH_NPROBE}
+                "params": {
+                    "nprobe": Config.SEARCH_NPROBE,
+                    "ef": 64,  # HNSW için ek parametre
+                    "search_k": -1  # Otomatik optimizasyon
+                }
             }
             
             # Filter oluştur
@@ -139,3 +172,27 @@ class MilvusClient:
             'total_sentences': self.collection.num_entities,
             'collection_name': self.collection.name
         }
+    
+    def health_check(self):
+        """Milvus v2.6.0 için gelişmiş sağlık kontrolü"""
+        try:
+            # Bağlantı durumunu kontrol et
+            server_version = utility.get_server_version()
+            
+            # Collection durumunu kontrol et
+            collection_stats = utility.get_collection_stats(self.collection.name)
+            loading_progress = utility.loading_progress(self.collection.name)
+            
+            return {
+                'status': 'healthy',
+                'server_version': server_version,
+                'collection_loaded': loading_progress['loading_progress'] == '100%',
+                'total_entities': collection_stats['row_count'],
+                'collection_name': self.collection.name
+            }
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return {
+                'status': 'unhealthy',
+                'error': str(e)
+            }

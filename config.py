@@ -14,10 +14,15 @@ class Config:
     API_PORT = 5000
     DEBUG = False
     
-    # Performans ayarları
+    # Milvus v2.6.0 performans ayarları
     BATCH_SIZE = 1000
     SEARCH_NPROBE = 20
     INDEX_NLIST = 2048
+    
+    # v2.6.0 yeni özellikler
+    ENABLE_STORAGE_V2 = True  # Storage Format V2 desteği
+    CONNECTION_TIMEOUT = 30   # Bağlantı timeout süresi
+    SEARCH_TIMEOUT = 60       # Arama timeout süresi
     
     # Log ayarları
     LOG_LEVEL = 'INFO'
