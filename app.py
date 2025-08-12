@@ -140,3 +140,10 @@ def search_sentences():
             'similar_sentences': similar_sentences,
             'processing_time': processing_time
         })
+    except Exception as e:
+        logger.error(f"Search error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# Flask uygulamasını doğrudan çalıştırmak için
+if __name__ == '__main__':
+    app.run(host=Config.API_HOST, port=Config.API_PORT, debug=Config.DEBUG)
