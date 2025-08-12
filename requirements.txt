@@ -2,5 +2,5 @@
 flask==2.3.3
 pymilvus==2.6.0
 protobuf>=3.20,<4.24
-grpcio>=1.62,<1.66
+grpcio>=1.68.0
 gunicorn==21.2.0

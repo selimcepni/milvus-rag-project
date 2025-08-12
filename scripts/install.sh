@@ -32,18 +32,18 @@ pip install --upgrade pip setuptools wheel packaging
 # Pre-install grpcio as binary wheel to avoid building from source
 echo "🔌 Ensuring grpcio binary wheel is available..."
 if ! python -c "import grpc, sys; print(grpc.__version__)" >/dev/null 2>&1; then
-  if ! pip install --only-binary=:all: "grpcio>=1.62,<1.66"; then
+  if ! pip install --only-binary=:all: "grpcio>=1.68.0"; then
     echo "⚠️ grpcio wheel not found; installing build deps and retrying..."
     sudo apt install -y pkg-config libc-ares-dev libssl-dev zlib1g-dev || true
-    pip install "grpcio>=1.62,<1.66"
+    pip install "grpcio>=1.68.0"
   fi
 fi
 
 echo "🔌 Preinstalling grpcio binary wheel..."
-if ! pip install --only-binary=:all: "grpcio>=1.62,<1.66"; then
+if ! pip install --only-binary=:all: "grpcio>=1.68.0"; then
   echo "⚠️ grpcio binary wheel not found; installing build deps and retrying..."
   sudo apt install -y pkg-config libc-ares-dev libssl-dev zlib1g-dev || true
-  pip install "grpcio>=1.62,<1.66"
+  pip install "grpcio>=1.68.0"
 fi
 
 echo "📦 Installing Python packages (prefer wheels)..."
