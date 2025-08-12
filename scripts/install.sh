@@ -27,7 +27,13 @@ source venv/bin/activate
 echo "📦 Upgrading pip and build tools..."
 pip install --upgrade pip setuptools wheel packaging
 
-# Install core Python packages (except torch first)
+echo "🔌 Preinstalling grpcio binary wheel..."
+if ! pip install --only-binary=:all: "grpcio>=1.62,<1.66"; then
+  echo "⚠️ grpcio binary wheel not found; installing build deps and retrying..."
+  sudo apt install -y pkg-config libc-ares-dev libssl-dev zlib1g-dev || true
+  pip install "grpcio>=1.62,<1.66"
+fi
+
 echo "📦 Installing Python packages (prefer wheels)..."
 pip install --prefer-binary -r requirements.txt
 
