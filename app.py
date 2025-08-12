@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 import logging
 import time
 import os
-from concurrent.futures import ThreadPoolExecutor
 import threading
 
 from milvus_client import MilvusClient
@@ -24,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 # Global objects
 milvus_client = None
-executor = ThreadPoolExecutor(max_workers=4)
 processing_lock = threading.Lock()
 
 def initialize_services():
@@ -40,11 +38,23 @@ def initialize_services():
         logger.error(f"Service initialization failed: {e}")
         return False
 
+# Try to initialize on startup so the service is ready immediately
+try:
+    if not initialize_services():
+        logger.warning("Milvus not ready at startup. Health endpoint will be unhealthy until Milvus is reachable.")
+except Exception as e:
+    logger.error(f"Startup initialization error: {e}")
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Sistem durumu"""
     try:
-        stats = milvus_client.get_stats()
+        global milvus_client
+        if milvus_client is None:
+            initialize_services()
+        stats = milvus_client.get_stats() if milvus_client else None
+        if not stats:
+            return jsonify({'status': 'unhealthy', 'error': 'Milvus not initialized'}), 503
         return jsonify({
             'status': 'healthy',
             'milvus_stats': stats

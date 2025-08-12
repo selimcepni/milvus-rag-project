@@ -11,7 +11,8 @@ except LookupError:
 
 class TextProcessor:
     def __init__(self):
-        self.model = SentenceTransformer(Config.MODEL_NAME)
+        # CPU-only kullanım: cihazı 'cpu' olarak sabitle
+        self.model = SentenceTransformer(Config.MODEL_NAME, device='cpu')
         
     def split_turkish_sentences(self, text):
         """Türkçe metni cümlelere ayır"""

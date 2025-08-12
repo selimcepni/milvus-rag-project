@@ -20,7 +20,8 @@ class LocalEmbeddingClient:
             server_url: Milvus server API URL
         """
         self.server_url = server_url.rstrip('/')
-        self.model = SentenceTransformer('emrecan/bert-base-turkish-cased-mean-nli-stsb-tr')
+        # CPU-only kullanım: cihazı 'cpu' olarak sabitle
+        self.model = SentenceTransformer('emrecan/bert-base-turkish-cased-mean-nli-stsb-tr', device='cpu')
         print(f"✅ Model loaded: {self.model}")
         
     def split_turkish_sentences(self, text: str) -> List[str]:
@@ -168,36 +169,6 @@ class LocalEmbeddingClient:
             print(f"❌ {error_msg}")
             return {"error": error_msg}
 
-# Örnek kullanım
+# İstemci sadece istemci ortamında kullanılacak; sunucu deploy'unda tetiklenmesin diye
 if __name__ == "__main__":
-    # Client oluştur
-    client = LocalEmbeddingClient("http://localhost:5000")
-    
-    # Örnek bölüm ekleme
-    sample_content = """
-    Merhaba, ben Ali. Bugün çok güzel bir gün. 
-    Hava çok güzel ve ben dışarı çıkmak istiyorum.
-    Arkadaşlarımla buluşacağız ve birlikte yürüyüş yapacağız.
-    """
-    
-    result = client.insert_episode(
-        project_name="Test Dizisi",
-        season=1,
-        episode_number=1,
-        timecode="00:05:30",
-        content=sample_content
-    )
-    print("Insert result:", result)
-    
-    # Örnek arama
-    query_sentences = [
-        "Bugün hava nasıl?",
-        "Arkadaşlarla ne yapacaksın?"
-    ]
-    
-    search_result = client.search_sentences(
-        query_sentences=query_sentences,
-        filters={"project_name": "Test Dizisi"},
-        top_k=2
-    )
-    print("Search result:", search_result)
+    print("Bu modül istemci tarafında embedding üretmek için tasarlanmıştır.")

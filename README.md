@@ -16,8 +16,18 @@ Türkçe dizi bölümleri için cümle bazlı RAG (Retrieval-Augmented Generatio
 - Milvus 2.3+
 - Ubuntu 20.04+ (önerilen)
 
+Sunucu (API) için minimal bağımlılıklar:
+
+```
+flask
+pymilvus
+gunicorn
+```
+
+Embedding üretimi tamamen istemci tarafındadır. İstemci için `sentence-transformers`, `torch`, `nltk` vb. paketleri kendi ortamınızda kurun.
+
 ## 🔧 Kurulum
 
-### Otomatik Kurulum
+### Otomatik Kurulum (Sunucu Minimal)
 ```bash
 ./scripts/install.sh

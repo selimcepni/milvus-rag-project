@@ -1,5 +1,4 @@
 from pymilvus import connections, Collection, FieldSchema, CollectionSchema, DataType
-import json
 import logging
 from config import Config
 
@@ -71,13 +70,15 @@ class MilvusClient:
                 [episode_number] * len(sentences),
                 [timecode] * len(sentences)
             ]
-            
+
+            # Milvus insert expects column order to match schema without the auto_id primary key
             self.collection.insert(data)
+            self.collection.flush()
             self.collection.load()
-            
+
             logger.info(f"Inserted {len(sentences)} sentences")
             return True
-            
+
         except Exception as e:
             logger.error(f"Insert failed: {e}")
             return False
@@ -117,14 +118,15 @@ class MilvusClient:
                 output_fields=["sentence"]
             )
             
-            # Sadece cümleleri döndür
+            # Her sorgu embedding'i için en iyi eşleşmeyi döndür
             similar_sentences = []
             for hits in results:
                 if hits and len(hits) > 0:
+                    # Top-1 cümlenin ham içeriğini al
                     similar_sentences.append(hits[0].entity.get('sentence'))
                 else:
                     similar_sentences.append("")
-            
+
             return similar_sentences
             
         except Exception as e:

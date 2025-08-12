@@ -28,24 +28,10 @@ echo "📦 Upgrading pip and build tools..."
 pip install --upgrade pip setuptools wheel packaging
 
 # Install core Python packages (except torch first)
-echo "📦 Installing core Python packages (prefer wheels)..."
-grep -v '^torch' requirements.txt > /tmp/req-no-torch.txt
-pip install --prefer-binary -r /tmp/req-no-torch.txt
+echo "📦 Installing Python packages (prefer wheels)..."
+pip install --prefer-binary -r requirements.txt
 
-# Install torch from official CPU wheels (compatible with many Python versions)
-echo "🧠 Installing PyTorch (CPU) ..."
-pip install "torch>=2.3,<3" --index-url https://download.pytorch.org/whl/cpu
-
-# Download NLTK data
-echo "📚 Downloading NLTK data..."
-python3 - <<'PY'
-import nltk
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-print('✅ NLTK ready')
-PY
+# No NLTK/model downloads needed on server (client does embeddings)
 
 # Create logs directory
 echo "📁 Creating logs directory..."
@@ -55,7 +41,7 @@ mkdir -p logs
 echo "🔐 Setting permissions..."
 chmod +x scripts/*.sh
 
-# Test installation (avoid heavy model load here)
+# Test installation (lightweight)
 echo "🧪 Testing installation..."
 python3 - <<'PY'
 from milvus_client import MilvusClient
