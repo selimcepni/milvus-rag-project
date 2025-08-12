@@ -1,0 +1,27 @@
+[Unit]
+Description=Milvus RAG API Service
+After=network.target milvus.service
+Wants=milvus.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/milvus-rag
+Environment=PATH=/opt/milvus-rag/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=/opt/milvus-rag
+ExecStart=/opt/milvus-rag/venv/bin/gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 --access-logfile /opt/milvus-rag/logs/access.log --error-logfile /opt/milvus-rag/logs/error.log app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/milvus-rag/logs
+
+[Install]
+WantedBy=multi-user.target
