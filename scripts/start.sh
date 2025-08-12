@@ -25,7 +25,9 @@ mkdir -p logs
 # Check for production mode
 if [ "$1" = "production" ]; then
     echo "🏭 Starting in production mode with Gunicorn..."
-    exec gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 --access-logfile logs/access.log --error-logfile logs/error.log app:app
+    # Bazı ortamlarda gunicorn script'i çalışmayabilir; güvenli yol: python -m gunicorn
+    exec python -m gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 \
+        --access-logfile logs/access.log --error-logfile logs/error.log app:app
 else
     echo "🔧 Starting in development mode..."
     export FLASK_ENV=development
