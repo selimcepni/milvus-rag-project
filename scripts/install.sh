@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 echo "🔧 Installing Milvus RAG System..."
 
 # Check if running as root
@@ -21,17 +23,29 @@ echo "🌐 Creating virtual environment..."
 python3 -m venv venv
 source venv/bin/activate
 
-# Upgrade pip
+## Upgrade pip
 echo "📦 Upgrading pip..."
 pip install --upgrade pip
 
-# Install Python packages
-echo "📦 Installing Python packages..."
-pip install -r requirements.txt
+# Install core Python packages (except torch first)
+echo "📦 Installing core Python packages..."
+grep -v '^torch' requirements.txt > /tmp/req-no-torch.txt
+pip install -r /tmp/req-no-torch.txt
+
+# Install torch from official CPU wheels (compatible with many Python versions)
+echo "🧠 Installing PyTorch (CPU) ..."
+pip install "torch>=2.3,<3" --index-url https://download.pytorch.org/whl/cpu
 
 # Download NLTK data
 echo "📚 Downloading NLTK data..."
-python3 -c "import nltk; nltk.download('punkt')"
+python3 - <<'PY'
+import nltk
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+print('✅ NLTK ready')
+PY
 
 # Create logs directory
 echo "📁 Creating logs directory..."
@@ -41,9 +55,12 @@ mkdir -p logs
 echo "🔐 Setting permissions..."
 chmod +x scripts/*.sh
 
-# Test installation
+# Test installation (avoid heavy model load here)
 echo "🧪 Testing installation..."
-python3 -c "from text_processor import TextProcessor; from milvus_client import MilvusClient; print('✅ Installation test passed')"
+python3 - <<'PY'
+from milvus_client import MilvusClient
+print('✅ Python deps OK. Milvus client importable.')
+PY
 
 echo "✅ Installation completed successfully!"
 echo "🚀 To start the application:"
