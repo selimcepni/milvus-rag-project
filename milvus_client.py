@@ -56,10 +56,14 @@ class MilvusClient:
             self.create_index()
             logger.info(f"Created new collection: {collection_name}")
         
-        # v2.6.0'da lazy loading desteği
-        if not utility.loading_progress(collection_name)['loading_progress'] == '100%':
+        # Koleksiyonu yükle (idempotent). Yeni oluşturulmuş veya boş koleksiyonlarda
+        # loading_progress çağrısı hata verebildiği için doğrudan load() kullanıyoruz.
+        try:
             self.collection.load()
             logger.info(f"Collection {collection_name} loaded successfully")
+        except Exception as load_error:
+            # Bazı durumlarda zaten yüklüyse veya arka planda yükleniyorsa hata dönmeyebilir/önemsizdir
+            logger.warning(f"Collection load call returned non-critical error: {load_error}")
     
     def create_index(self):
         """Index oluştur - Milvus v2.6.0 optimizasyonları ile"""
