@@ -23,14 +23,14 @@ echo "🌐 Creating virtual environment..."
 python3 -m venv venv
 source venv/bin/activate
 
-## Upgrade pip
-echo "📦 Upgrading pip..."
-pip install --upgrade pip
+## Upgrade pip and core build tools
+echo "📦 Upgrading pip and build tools..."
+pip install --upgrade pip setuptools wheel packaging
 
 # Install core Python packages (except torch first)
-echo "📦 Installing core Python packages..."
+echo "📦 Installing core Python packages (prefer wheels)..."
 grep -v '^torch' requirements.txt > /tmp/req-no-torch.txt
-pip install -r /tmp/req-no-torch.txt
+pip install --prefer-binary -r /tmp/req-no-torch.txt
 
 # Install torch from official CPU wheels (compatible with many Python versions)
 echo "🧠 Installing PyTorch (CPU) ..."
