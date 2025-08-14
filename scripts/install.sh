@@ -4,10 +4,9 @@ set -euo pipefail
 
 echo "🔧 Installing Milvus RAG System..."
 
-# Check if running as root
+# Root olarak çalışıyorsa bilgilendir
 if [[ $EUID -eq 0 ]]; then
-   echo "❌ This script should not be run as root"
-   exit 1
+   echo "ℹ️ Script root olarak çalışıyor. Devam ediliyor."
 fi
 
 # Update system
@@ -61,7 +60,7 @@ chmod +x scripts/*.sh
 
 # Test installation (lightweight)
 echo "🧪 Testing installation..."
-python3 - <<'PY'
+python - <<'PY'
 from milvus_client import MilvusClient
 print('✅ Python deps OK. Milvus client importable.')
 PY
@@ -70,3 +69,25 @@ echo "✅ Installation completed successfully!"
 echo "🚀 To start the application:"
 echo "   source $VENV_PATH/bin/activate"
 echo "   python3 app.py"
+
+# Opsiyonel: systemd servisini kur (root ise ve AUTOINSTALL_SYSTEMD=1 veya boş)
+if [[ ${AUTOINSTALL_SYSTEMD:-1} -eq 1 && $EUID -eq 0 ]]; then
+  echo "⚙️  Systemd servisi kuruluyor..."
+  # Varsayılan ortam dosyası oluştur
+  cat >/etc/default/milvus-rag <<'ENVEOF'
+# Milvus RAG Service Environment
+MILVUS_RAG_ROOT=/opt/milvus-rag
+MILVUS_RAG_LOG_DIR=/opt/milvus-rag/logs
+MILVUS_HOST=localhost
+MILVUS_PORT=19530
+# Venv python yolu
+MILVUS_RAG_PYTHON=/opt/milvus-rag/venv/bin/python
+ENVEOF
+
+  # Servis dosyasını kopyala ve etkinleştir
+  install -m 0644 systemd/milvus-rag.service /etc/systemd/system/milvus-rag.service
+  systemctl daemon-reload
+  systemctl enable milvus-rag
+  systemctl restart milvus-rag || true
+  echo "📝 Loglar: journalctl -u milvus-rag -f"
+fi

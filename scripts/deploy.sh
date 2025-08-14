@@ -4,7 +4,7 @@
 # Usage: ./deploy.sh [server-ip] [username]
 
 SERVER_HOST=${1:-"your-server-ip"}
-SERVER_USER=${2:-"ubuntu"}
+SERVER_USER=${2:-"root"}
 PROJECT_PATH="/opt/milvus-rag"
 
 if [ "$SERVER_HOST" = "your-server-ip" ]; then
@@ -25,7 +25,7 @@ fi
 
 # 1. Create project directory on server
 echo "📁 Creating project directory on server..."
-ssh $SERVER_USER@$SERVER_HOST "sudo mkdir -p $PROJECT_PATH && sudo chown $SERVER_USER:$SERVER_USER $PROJECT_PATH"
+ssh $SERVER_USER@$SERVER_HOST "mkdir -p $PROJECT_PATH && chown $SERVER_USER:$SERVER_USER $PROJECT_PATH"
 
 # 2. Copy files to server (excluding unnecessary files)
 echo "📤 Copying project files to server..."
@@ -39,15 +39,15 @@ rsync -avz --progress \
 
 # 3. Install dependencies on server
 echo "📦 Installing dependencies on server..."
-ssh $SERVER_USER@$SERVER_HOST "cd $PROJECT_PATH && chmod +x scripts/*.sh && ./scripts/install.sh"
+ssh $SERVER_USER@$SERVER_HOST "cd $PROJECT_PATH && chmod +x scripts/*.sh && AUTOINSTALL_SYSTEMD=1 VENV_PATH=venv ./scripts/install.sh"
 
 # 4. Setup systemd service
 echo "⚙️ Setting up systemd service..."
-ssh $SERVER_USER@$SERVER_HOST "sudo cp $PROJECT_PATH/systemd/milvus-rag.service /etc/systemd/system/ && sudo systemctl daemon-reload"
+ssh $SERVER_USER@$SERVER_HOST "cp $PROJECT_PATH/systemd/milvus-rag.service /etc/systemd/system/ && systemctl daemon-reload"
 
 # 5. Enable and start service
 echo "🔄 Starting service..."
-ssh $SERVER_USER@$SERVER_HOST "sudo systemctl enable milvus-rag && sudo systemctl restart milvus-rag"
+ssh $SERVER_USER@$SERVER_HOST "systemctl enable milvus-rag && systemctl restart milvus-rag"
 
 # 6. Wait a moment for service to start
 echo "⏳ Waiting for service to start..."
@@ -55,14 +55,14 @@ sleep 10
 
 # 7. Check service status
 echo "✅ Checking service status..."
-ssh $SERVER_USER@$SERVER_HOST "sudo systemctl status milvus-rag --no-pager"
+ssh $SERVER_USER@$SERVER_HOST "systemctl status milvus-rag --no-pager"
 
 # 8. Test API endpoint
 echo "🧪 Testing API endpoint..."
 if ssh $SERVER_USER@$SERVER_HOST "curl -s http://localhost:5000/health" > /dev/null; then
     echo "✅ API is responding"
 else
-    echo "⚠️ API might not be ready yet. Check logs with: sudo journalctl -u milvus-rag -f"
+    echo "⚠️ API might not be ready yet. Check logs with: journalctl -u milvus-rag -f"
 fi
 
 echo ""
